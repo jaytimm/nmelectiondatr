@@ -51,8 +51,7 @@ Available [here](https://github.com/nvkelso/election-geodata).  NOTE (& keep a r
 #nm_prec_tigris <- tigris::voting_districts('New Mexico') 
 
 nm_precincts <- sf::st_read ("C:\\Users\\jason\\Google Drive\\GitHub\\packages\\nmelectiondatr\\data-raw\\nm-2012-precincts","precincts_2012")%>%
-  mutate(county_name = gsub(' County.*$', '', NAME10)) %>%
-  sf::st_transform("+proj=longlat +datum=NAD83 +no_defs")
+  mutate(county_name = gsub(' County.*$', '', NAME10)) 
 
 colnames(nm_precincts) <- c('NAME10','Precinct_Num', 'House_District', 'Senate_District', 'USCong_District', 'County_Name', 'geometry')
 
@@ -60,7 +59,18 @@ nm_precincts$County_Name[grep('a Ana', nm_precincts$County_Name)] <- 'Dona Ana'
 
 nm_precincts$NAME10 <- paste0(nm_precincts$County_Name, gsub('(^.*)( County.*$)', '\\2', nm_precincts$NAME10))
 
-nm_precincts <- sf::st_transform(nm_precincts, "+proj=longlat +datum=NAD83 +no_defs")
+
+crs <- sf::st_crs("+proj=longlat +datum=NAD83 +no_defs") # Lambert equal area
+nm_precincts <- sf::st_transform(nm_precincts, crs = crs)
+st_crs(nm_precincts)$proj4string <- "+proj=longlat +datum=NAD83 +no_defs"
+
+
+nm_precincts1 <- sf::st_join(us_house_districts, 
+                                          sf::st_centroid(nm_precincts), #Super hacky.
+                             join = st_contains) %>%
+  select(-USCong_District, -GEOID) %>%
+  mutate(USCong_District = as.numeric(NAME)) %>%
+  select(-NAME)
 ```
 
 
@@ -70,7 +80,7 @@ Simple list object:
 ```{r}
 nmel_pol_geos <- list('nm_counties' = nm_counties, 
                       'nm_places' = nm_places,
-                      'nm_precincts' = nm_precincts,
+                      'nm_precincts' = nm_precincts1,
                       'nm_senate_districts' = nm_senate_districts, 
                       'nm_house_districts' = nm_house_districts, 
                       'us_congress_districts'= us_house_districts)
