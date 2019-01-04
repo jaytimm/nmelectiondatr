@@ -1,0 +1,88 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r message=FALSE, warning=FALSE}
+library(tigris); options(tigris_use_cache = TRUE, tigris_class = "sf")
+library(sf)
+library(tidyverse)
+```
+
+
+
+Shapes.
+
+```{r message=FALSE, warning=FALSE}
+nm_house_districts <- tigris::state_legislative_districts('New Mexico', 
+                                                  house = "lower", 
+                                                  cb = TRUE)  %>%
+  select(GEOID, NAME)
+
+nm_senate_districts <- tigris::state_legislative_districts('New Mexico', 
+                                                  house = "upper", 
+                                                  cb = TRUE) %>%
+  select(GEOID, NAME)
+
+us_house_districts <- tigris::congressional_districts(cb = TRUE) %>%
+  filter(STATEFP == '35') %>%
+  select(GEOID, CD115FP) %>% 
+  rename(NAME=CD115FP)
+  
+nm_counties <- tigris::counties(state='New Mexico', cb = TRUE) %>%
+  select(GEOID, NAME) %>%
+  sf::st_set_crs(sf::st_crs(nmelectiondatr::nmel_pol_geos$nm_house_districts))
+
+nm_places <- tigris::places(state='New Mexico', cb = TRUE) %>%
+  select(GEOID, NAME, LSAD)
+
+
+nm_counties$NAME[grep('a Ana', nm_counties$NAME)] <- 'Dona Ana'
+#st_crs(us_house_districts)
+#st_transform(26913)  
+#For leaflet --- #sf::st_set_crs('+proj=longlat +datum=WGS84')
+```
+
+
+
+Available [here](https://github.com/nvkelso/election-geodata).  NOTE (& keep a record of.):  Precinct shapefile from `tigris` has n = 1448 unique county/precints.  Precinct shapefile from Git: 1483.  Election results from NM_SOS 2016 & 2018: 1492.  11 precincts exist in NM_SOS election data that do not exist in shapefile via Git.  (in fed HDs 2 & 3).
+
+```{r message=FALSE, warning=FALSE}
+#nm_prec_tigris <- tigris::voting_districts('New Mexico') 
+
+nm_precincts <- sf::st_read ("C:\\Users\\jason\\Google Drive\\GitHub\\packages\\nmelectiondatr\\data-raw\\nm-2012-precincts","precincts_2012")%>%
+  mutate(county_name = gsub(' County.*$', '', NAME10)) %>%
+  sf::st_transform("+proj=longlat +datum=NAD83 +no_defs")
+
+colnames(nm_precincts) <- c('NAME10','Precinct_Num', 'House_District', 'Senate_District', 'USCong_District', 'County_Name', 'geometry')
+
+nm_precincts$County_Name[grep('a Ana', nm_precincts$County_Name)] <- 'Dona Ana'
+
+nm_precincts$NAME10 <- paste0(nm_precincts$County_Name, gsub('(^.*)( County.*$)', '\\2', nm_precincts$NAME10))
+
+nm_precincts <- sf::st_transform(nm_precincts, "+proj=longlat +datum=NAD83 +no_defs")
+```
+
+
+
+Simple list object:
+
+```{r}
+nmel_pol_geos <- list('nm_counties' = nm_counties, 
+                      'nm_places' = nm_places,
+                      'nm_precincts' = nm_precincts,
+                      'nm_senate_districts' = nm_senate_districts, 
+                      'nm_house_districts' = nm_house_districts, 
+                      'us_congress_districts'= us_house_districts)
+```
+
+
+
+
+###6. Output, etc. 
+
+```{r eval=FALSE, include=FALSE}
+setwd("C:\\Users\\jason\\Google Drive\\GitHub\\packages\\nmelectiondatr")
+devtools::use_data(nmel_pol_geos, overwrite=TRUE)
+```
+

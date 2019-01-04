@@ -1,0 +1,336 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+
+This could likely be a table.
+
+```{r}
+#2018---
+nm_hds_2018 <- "http://electionresults.sos.state.nm.us/resultsSW.aspx?type=LGX&map=CTY&lValue=100&gValue=001"
+nm_fed_2018 <- 'http://electionresults.sos.state.nm.us/resultsSW.aspx?type=FED&map=CTY'
+nm_state_2018 <- 'http://electionresults.sos.state.nm.us/resultsSW.aspx?type=SW&map=CTY'
+
+
+#2016---
+nm_hds_2016 <- 'http://electionresults.sos.state.nm.us/resultsSW.aspx?eid=84&type=RPX&map=CTY'
+nm_sds_2016 <- 'http://electionresults.sos.state.nm.us/resultsSW.aspx?eid=84&type=SNX&map=CTY'
+nm_fed_2016 <- 'http://electionresults.sos.state.nm.us/resultsSW.aspx?eid=84&type=FED&map=CTY'
+nm_state_2016 <- 'http://electionresults.sos.state.nm.us/resultsSW.aspx?eid=84&type=SW&map=CTY'
+
+
+#2014---
+nm_hds_2014 <- 'http://electionresults.sos.state.nm.us/resultsSW.aspx?eid=2&type=LGX&map=CTY&lValue=100&gValue=001'
+nm_fed_2014 <- 'http://electionresults.sos.state.nm.us/resultsSW.aspx?eid=2&type=FED&map=CTY'
+nm_state_2014 <- 'http://electionresults.sos.state.nm.us/resultsSW.aspx?eid=2&type=SW&map=CTY'
+
+
+#Totals---
+all_sos_links <- c(nm_hds_2018, nm_fed_2018, nm_state_2018,
+                   nm_hds_2016, nm_sds_2016, nm_fed_2016, nm_state_2016,
+                   nm_hds_2014, nm_fed_2014, nm_state_2014)
+```
+
+
+
+
+Simple eid--year crosswalk.
+
+```{r}
+yearcross <- data.frame(eid = c('2', '84'), year = c('2014', '2016'),
+                        stringsAsFactors = FALSE)
+```
+
+
+Some base-r functions.
+
+```{r}
+fill_down <- function(z) { 
+  y <- c(NA, head(z, -1))
+  z <- ifelse(is.na(z), y, z)
+  if (any(is.na(z))) Recall(z) else z }
+
+winner <- function(x) {
+  y <- rep('', length(x))
+  y[which.max(x)] <- 'Winner'
+  y}
+```
+
+
+
+
+```{r eval=FALSE}
+library(XML)
+
+nmsl_get_vote_results <- function(link) {
+
+  #Step 0. Get year.
+  year <- ifelse(length(grep('eid', link))==1, '1', '2018')
+  
+  if (year == '1') {
+    eid <- gsub('(^.*eid=)([0-9]+)(&.*$)', '\\2', link)
+    year <- yearcross[yearcross==eid ,]$year  
+    eid <- paste0('&eid=',eid)
+     } else {
+      eid <-''}
+    
+    
+  #Step 1. Scrape web.
+  x <- XML::readHTMLTable(link, 
+                        as.data.frame=TRUE, 
+                        stringsAsFactors=FALSE) 
+  
+  #Step 2. Get metadata.
+  keys <- x[["MainContentxuwgResults_main"]][c(2, 3, 7, 13)] 
+  keys <- keys[grepl('Follow this', keys$V2),]
+  Encoding(keys$V2) <- 'UTF-8'
+  keys$V2 <- gsub('Follow .*$', '', keys$V2)
+  
+  keys$V2 <- gsub('[^[:alnum:] -]', '', keys$V2)
+  keys$V2 <- trimws(keys$V2)
+  
+
+  keys$id <- c(1:nrow(keys))
+  keys$type_name <- gsub(' -.*$', '', keys$V2)
+  keys$geo_name <- gsub('^.* - ', '', keys$V2)
+
+  keys <- keys[, c(6, 5, 7, 2:4)]
+  colnames(keys)[4:6] <- c('rid', 'osn', 'type')
+
+  
+  #Step 3. Build link.
+  keys$link <- paste0('http://electionresults.sos.state.nm.us/ResultsExport.aspx?rid=', keys$rid, '&osn=', keys$osn, '&pty=&name=', gsub(' ', '%20', keys$type_name), '&cat=CTYALL', eid)
+  
+  keys$Year <- year
+  keys <- keys[, c(8,2,1,3,7)]
+  keys <- keys[!grepl('retention|amendment|bond', tolower(keys$type_name)),] #Remove questions.
+  
+  #Step 4. 
+  olnasty <- x[["MainContentxuwgResults_main"]][c(3,4,14)] 
+  Encoding(olnasty$V3) <- 'UTF-8'
+
+  olnasty <- olnasty[complete.cases(olnasty), ]
+  olnasty <- olnasty[!grepl('^Total|^[0-9]', olnasty$V3),]
+  olnasty <- olnasty[grepl('^[A-Z]', olnasty$V3),]
+
+  olnasty$id <- c(1:nrow(olnasty))
+  olnasty$id <- ifelse(olnasty$id %in% grep('Candidate', olnasty$V3), olnasty$id, NA)
+
+  olnasty$id <- fill_down(olnasty$id)
+  olnasty <- subset(olnasty, V3 != 'Candidate')
+  olnasty <- within(olnasty, id <- match(olnasty$id, unique(olnasty$id)))
+
+  olnasty <- olnasty[, c(4,1,3,2)]
+  colnames(olnasty) <- c('id','Candidate', 'Party', 'Votes')
+  olnasty$Votes <- as.numeric(gsub(',', '', olnasty$Votes))
+
+  olnasty$Winner <- unlist(tapply(olnasty$Votes, olnasty$id, winner))
+  olnasty$Year <- year
+  
+  #Add type_name & geo_name via id column.
+  olnasty <- merge(olnasty, keys[, c(1:4)])
+  olnasty <- olnasty[, c(2,7:8,1,3:6)]
+  keys <- keys[, c(1,3:5)]
+  
+  #Step 5. Output data as list.
+  out <- list("Results" = olnasty, "Meta" = keys)
+  return(out)
+}
+```
+
+
+
+```{r eval=FALSE, message=FALSE, warning=FALSE}
+elections_summary <- lapply(all_sos_links, nmsl_get_vote_results)
+
+library(tidyverse)
+full_meta <- lapply(elections_summary, '[[', 2) %>%
+  bind_rows()
+
+full_results <- lapply(elections_summary, '[[', 1) %>%
+  bind_rows()
+```
+
+
+Address some encoding issues.  Not a fantastic solution.
+```{r eval=FALSE}
+full_results$Candidate <- gsub('\\.', '',  full_results$Candidate) #Periods
+full_results$Candidate <- gsub('\"', '\'', full_results$Candidate)
+
+full_results$Candidate [grep('LORENZO', full_results$Candidate)] <- 'LORENZO A LARRA\u00D1AGA'
+full_results$Candidate [grep('BRIAN S', full_results$Candidate)] <- 'BRIAN S COL\u00D3N'
+full_results$Candidate [grep('JOHNNY', full_results$Candidate)] <- 'JOHNNY F LU\u00C9VANO JR'
+full_results$Candidate [grep('COFFEY', full_results$Candidate)] <- 'ROBERT M COFFEY JR'
+full_results$Candidate [grep('GEORGE DODGE', full_results$Candidate)] <- 'GEORGE DODGE JR'
+full_results$Candidate [grep('ALFRED GORDON', full_results$Candidate)] <- 'ALFRED GORDON GLASS JR'
+```
+
+
+
+Get election results.  where 'x' is a link based on 'keys' table.  As opposed to hand-built table that includes leg house districts, fed house & senate.  
+
+```{r eval=FALSE}
+library(httr)
+library(readxl) 
+
+nmsl_get_precinct_data <- function(x) {
+  
+  #Step 1.
+    tmp <- tempfile()
+    filename <- paste0(tmp,'.xlsx')
+    httr::GET(x, write_disk(filename))
+    sheets <- readxl::excel_sheets(filename)
+
+  #Step 2.
+    z <- lapply(sheets, 
+                function(y) 
+                  readxl::read_excel(filename,
+                                     sheet = y, 
+                                     col_names = TRUE, 
+                                     skip = ifelse(grepl('State', x), 6, 5))) 
+  #Step 3. Re-do with Base-R.
+    names(z) <- sheets  
+    z <- bind_rows(z, .id = 'geo1') %>%
+      mutate(geo2 = ifelse(is.na(County), Precinct, County)) %>%
+      select(-County, -Precinct) %>%
+      select(geo1, geo2, everything()) %>%
+      gather(key = Candidate, value = votes, c(3:ncol(.)))
+}
+```
+
+
+Then apply. Per legislative "unit".  Results as a list of dataframes -- each legislative geo as independent df.
+
+```{r eval=FALSE}
+elections_nmsos_raw <- lapply(full_meta$link, nmsl_get_precinct_data)
+
+names(elections_nmsos_raw) <- paste0(full_meta$Year, '-',full_meta$type_name, '-', full_meta$geo_name)
+
+elections_nmsos <- bind_rows(elections_nmsos_raw, .id = 'govt') %>%
+  separate(govt, c('Year', 'type_name', 'geo_name'), '-') %>%
+  mutate(Candidate = gsub('\\.', '', Candidate)) %>%
+  mutate(Candidate = gsub('\"', '\'', Candidate)) %>%
+  left_join(full_results %>% select(Year, type_name, geo_name, Candidate, Party))
+
+#"(TED) THEODORE BARELA", "'ROCKY' ROQUE DE LA FUENTE AND MICHAEL STEINBERG"
+
+elections_nmsos$geo1[grep('a Ana',elections_nmsos$geo1)] <- 'Dona Ana'
+elections_nmsos$geo2[grep('a Ana',elections_nmsos$geo2)] <- 'Dona Ana'
+```
+
+Add GEOIDs -- ?  
+
+
+Includes all statewide/federal/state legslative races at the precinct level. 
+
+```{r}
+nmel_results_precinct <- elections_nmsos %>%
+  filter(grepl('PRE|PCT|^[0-9]|Precinct', geo2)) %>%
+  mutate(geo1 = trimws(gsub(' - .*$', '', geo1)),
+         geo2 = (as.numeric(gsub('[^0-9]' ,'', geo2))),
+         geo_name = gsub('^DISTRICT |^District ', '', geo_name))#%>%
+  #rename(prec_num = geo, county_name = vote_type)
+
+colnames(nmel_results_precinct) <- c('Year','Type', 'Type_Sub', 'County_Name', 'Precinct_Num', 'Candidate', 'Votes', 'Party')
+```
+
+
+
+Includes NM state legislature races aggregated to nm congressional districts. Disaggregated by Early/Absentee/ElectionDay.
+
+```{r}
+nmel_results_district <- elections_nmsos %>%
+  filter(grepl('State Representative|State Senator', type_name) &
+           grepl('County Results - ', geo1) & geo2 == 'TOTALS') %>%
+  mutate(geo_name = gsub('^DISTRICT |^District ', '', geo_name)) %>%
+  mutate(cast = gsub('County Results - ', '', geo1)) %>%
+  select(-geo1,-geo2)
+
+colnames(nmel_results_district) <- c('Year','Type', 'NAME', 'Candidate', 'Votes', 'Party', 'Cast')
+```
+
+
+
+Includes state-wide/federal races aggregated at the county level. At-large races. Disaggregated by Early/Absentee/ElectionDay.
+
+```{r}
+nmel_results_county <- elections_nmsos %>%
+  filter(!grepl('State Representative|State Senator|Representative', type_name) &
+           grepl('County Results - ', geo1))%>%
+  mutate(cast = gsub('County Results - ', '', geo1))%>%
+  select(-geo1, -geo_name) %>%
+  rename(NAME = geo2)
+
+colnames(nmel_results_county) <- c('Year','Type', 'NAME', 'Candidate', 'Votes', 'Party', 'Cast')
+```
+
+
+```{r}
+nmel_results_summary <- full_results %>%
+  select(-id)%>%
+  mutate(geo_name = gsub('^DISTRICT |^District ', '', geo_name)) %>%
+  group_by(Year, type_name, geo_name) %>%
+  mutate(Percent = round(Votes/sum(Votes),3)) %>%
+  select(Year:Votes, Percent, Winner)%>%
+  ungroup()
+
+colnames(nmel_results_summary) <- c('Year','Type', 'Type_Sub', 'Candidate', 'Party', 'Votes', 'Percent', 'Winner')
+```
+
+
+
+###6. Output, etc. 
+
+STILL need to output full_results.
+
+```{r eval=FALSE, include=FALSE}
+setwd("C:\\Users\\jason\\Google Drive\\GitHub\\packages\\nmelectiondatr")
+devtools::use_data(nmel_results_summary, overwrite=TRUE)
+devtools::use_data(nmel_results_precinct, overwrite=TRUE)
+devtools::use_data(nmel_results_district, overwrite=TRUE)
+devtools::use_data(nmel_results_county, overwrite=TRUE)
+```
+
+
+
+```{r eval=FALSE, include=FALSE}
+#Output to single xl file.
+setwd("C:\\Users\\jason\\Google Drive\\GitHub\\packages\\nmelectiondatr\\nmelection_tables\\excel")
+library(writexl) #Lovely package.
+
+out <- list('nmel_results_summary' = nmel_results_summary,
+            'nmel_results_precinct' = nmel_results_precinct, 
+            'nmel_results_district' = nmel_results_district, 
+            'nmel_results_county' = nmel_results_county)
+writexl::write_xlsx(out, 'nmelectiondatr.xlsx')
+
+#Perhaps as CSVs as well.  Allow for investigation via github.
+```
+
+
+```{r eval=FALSE, include=FALSE}
+#Output to CSVs to link as examples in Demo.
+setwd("C:\\Users\\jason\\Google Drive\\GitHub\\packages\\nmelectiondatr\\nmelection_tables\\CSVs")
+write.csv(nmel_results_precinct, 'nmel_results_precinct.csv' , row.names=FALSE)
+write.csv(nmel_results_district, 'nmel_results_district.csv' , row.names=FALSE)
+write.csv(nmel_results_county, 'nmel_results_county.csv' , row.names=FALSE)
+write.csv(nmel_results_summary, 'nmel_results_summary.csv' , row.names=FALSE)
+```
+
+
+Output consists of six tables, which are made available in three different formats:
+
+* As data frames in the `nmlegisdatr` R package
+* As a [collection of CSVs](https://github.com/jaytimm/nmlegisdatr/tree/master/nmsl_tables/CSVs)
+* As tabs in a single [excel file](https://github.com/jaytimm/nmlegisdatr/tree/master/nmsl_tables/excel)
+
+
+
+
+
+
+
+
+
