@@ -65,12 +65,16 @@ nm_precincts <- sf::st_transform(nm_precincts, crs = crs)
 st_crs(nm_precincts)$proj4string <- "+proj=longlat +datum=NAD83 +no_defs"
 
 
-nm_precincts1 <- sf::st_join(us_house_districts, 
-                                          sf::st_centroid(nm_precincts), #Super hacky.
-                             join = st_contains) %>%
-  select(-USCong_District, -GEOID) %>%
+nm_precincts1 <- sf::st_join( 
+  us_house_districts, 
+  sf::st_centroid(nm_precincts), #Super hacky. This whole bit.
+  join = st_contains) %>%
+  data.frame() %>%
+  select(-USCong_District, -GEOID, -geometry) %>%
   mutate(USCong_District = as.numeric(NAME)) %>%
-  select(-NAME)
+  select(-NAME) %>%
+  left_join(nm_precincts) %>%
+  sf::st_as_sf()
 ```
 
 
