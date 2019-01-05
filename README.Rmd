@@ -1,0 +1,67 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "##",
+  fig.path =  "figure-markdown_github/")
+```
+
+
+#nmelectiondatr
+
+##An R data package containing general election results for the state of New Mexico (2014+)
+
+This package provides access to data ... General election results for federal, legislative, and statewide offices.     
+
+
+Data included in the package have been scraped from thousands of PDFs made available via the official site of the [New Mexico State Legislature](https://www.nmlegis.gov/Legislation/Legislation_List).  A full code-through of the scraping & summary processes is available  [here](https://github.com/jaytimm/nmlegisdatr/blob/master/data-raw/scrape_nmsl_data.md).
+
+Scraped from the New Mexico Secretary of State website.
+
+A companion package to `nmlegisdatr`.
+
+##Installation
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+library(devtools)
+devtools::install_github("jaytimm/nmelectiondatr")
+library(nmelectiondatr)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(nmelectiondatr)
+library(tidyverse)
+```
+
+
+
+##Usage
+
+The package contains six data tables; their contents are summarized in the table below.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(knitr)
+Table <- c('nmel_pol_geos',
+           'nmel_results_county',
+           'nmel_results_district',
+           'nmel_results_precinct')
+
+Contents <- c('All introduced legislation, including bill id, title, and bill description',
+                 'All legislators in both chambers, including party affiliation and legislative district',
+                 'Roll calls for all legislation reaching either chamber for vote',
+                 'Sponsors for each bill',
+                 'Roll call results, including results disaggregated by political affiliation',
+                 'Votes cast, atttendance rates, and party loyalty rates for all legislators')
+
+kable(data.frame(cbind(Table, Contents)))
+```
+
+
+Tables can also be viewed as a [collection of CSVs](https://github.com/jaytimm/nmlegisdatr/tree/master/nmsl_tables/CSVs) or as individual tabs in a single [Excel file](https://github.com/jaytimm/nmlegisdatr/tree/master/nmsl_tables/excel).
+
+
