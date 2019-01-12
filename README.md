@@ -1,14 +1,14 @@
 nmelectiondatr
 ==============
 
-An R data package containing general election results for the state of New Mexico (2014+)
------------------------------------------------------------------------------------------
+An R data package for Election Data in New Mexico
+-------------------------------------------------
 
-This package provides access to data about the 53rd New Mexico State Legislature, including roll call data, bill details, state legislator information, and some high-level characterizations of legislator voting patterns.
+The package includes general election results for the state of New Mexico (2014, 2016 & 2018), including returns for federal, legislative, and statewide offices. Election returns are made available at the precinct, county, and state legislative levels.
 
-Data included in the package have been scraped from thousands of PDFs made available via the official site of the [New Mexico State Legislature](https://www.nmlegis.gov/Legislation/Legislation_List). A full code-through of the scraping & summary processes is available [here](https://github.com/jaytimm/nmlegisdatr/blob/master/data-raw/scrape_nmsl_data.md).
+Data included in the package have been collated from excel files made available by the [New Mexico Secretary of State](http://www.sos.state.nm.us/Elections_Data/Past_Election_Results.aspx). Anyone who has dealt with NM SOS data knows they are challenging to work with. Here, we make these data available in simple, aggregated tables that enable more straightforward analyses.
 
-A companion package to `nmlegisdatr`.
+A full code-through of the scraping & summary processes is available [here](https://github.com/jaytimm/nmelectiondatr/blob/master/data-raw/scrape_nmelect_data.Rmd). Code includes functions for gathering election returns that can be used for future statewide/state legislative/federal elections.
 
 Installation
 ------------
@@ -22,15 +22,46 @@ library(nmelectiondatr)
 Usage
 -----
 
-The package contains six data tables; their contents are summarized in the table below.
+### Election returns
 
-| Table                  | Contents                                                                               |
-|:-----------------------|:---------------------------------------------------------------------------------------|
-| nml\_legislation       | All introduced legislation, including bill id, title, and bill description             |
-| nml\_legislators       | All legislators in both chambers, including party affiliation and legislative district |
-| nml\_rollcall          | Roll calls for all legislation reaching either chamber for vote                        |
-| nml\_sponsors          | Sponsors for each bill                                                                 |
-| nml\_rollcall\_results | Roll call results, including results disaggregated by political affiliation            |
-| nml\_legislator\_descs | Votes cast, atttendance rates, and party loyalty rates for all legislators             |
+The package contains four data tables; their contents are summarized in the table below.
 
-Tables can also be viewed as a [collection of CSVs](https://github.com/jaytimm/nmlegisdatr/tree/master/nmsl_tables/CSVs) or as individual tabs in a single [Excel file](https://github.com/jaytimm/nmlegisdatr/tree/master/nmsl_tables/excel).
+| Table                   | Contents                        |
+|:------------------------|:--------------------------------|
+| nmel\_results\_summary  | An overview of election winners |
+| nmel\_results\_precinct | Election returns by precinct    |
+| nmel\_results\_district | Election returns by district    |
+| nmel\_results\_county   | Election returns by county      |
+
+An overview of election winners for ...
+
+``` r
+nmelectiondatr::nmel_results_summary %>% head()
+## # A tibble: 6 x 8
+##   Year  Type                 Type_Sub Candidate Party Votes Percent Winner
+##   <chr> <chr>                <chr>    <chr>     <chr> <dbl>   <dbl> <chr> 
+## 1 2018  State Representative 1        RODNEY D~ REP   8512.      1. Winner
+## 2 2018  State Representative 10       G ANDRES~ DEM   4927.      1. Winner
+## 3 2018  State Representative 11       JAVIER I~ DEM   9875.      1. Winner
+## 4 2018  State Representative 12       PATRICIO~ DEM   4326.      1. Winner
+## 5 2018  State Representative 13       PATRICIA~ DEM   4749.      1. Winner
+## 6 2018  State Representative 14       MIGUEL P~ DEM   5370.      1. Winner
+```
+
+Tables can also be viewed as a [collection of CSVs](https://github.com/jaytimm/nmelectiondatr/tree/master/nmelection_tables/CSVs) or as individual tabs in a single [Excel file](https://github.com/jaytimm/nmelectiondatr/tree/master/nmelection_tables/excel).
+
+### Shapefiles
+
+``` r
+data.frame(table = c('nm_counties', 'nm_places', 'nm_senate_districts', 'nm_house_districts', 'us_congress_districts'),
+           desc = c('New Mexico counties', 'Census designated places in New Mexico', 'State Senate districts in New Mexico', 'State House districts in New Mexico', 'Congressional districts in New Mexico')) %>%
+  knitr::kable()
+```
+
+| table                   | desc                                   |
+|:------------------------|:---------------------------------------|
+| nm\_counties            | New Mexico counties                    |
+| nm\_places              | Census designated places in New Mexico |
+| nm\_senate\_districts   | State Senate districts in New Mexico   |
+| nm\_house\_districts    | State House districts in New Mexico    |
+| us\_congress\_districts | Congressional districts in New Mexico  |
