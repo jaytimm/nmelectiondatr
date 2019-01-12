@@ -8,9 +8,7 @@ The package includes general election results for the state of New Mexico (2014,
 
 Data included in the package have been collated from excel files made available by the [New Mexico Secretary of State](http://www.sos.state.nm.us/Elections_Data/Past_Election_Results.aspx). Anyone who has dealt with NM SOS data knows they are challenging to work with. Here, we make these data available in simple, aggregated tables that enable more straightforward analyses.
 
-Tables can be accessed via the R package described here, as a [collection of CSVs](https://github.com/jaytimm/nmelectiondatr/tree/master/nmelection_tables/CSVs), or as individual tabs in a single [Excel file](https://github.com/jaytimm/nmelectiondatr/tree/master/nmelection_tables/excel).
-
-A full code-through of the scraping & summary processes is available [here](https://github.com/jaytimm/nmelectiondatr/blob/master/data-raw/scrape_nmelect_data.Rmd). Code includes functions for gathering election returns that can be used for future statewide/state legislative/federal elections.
+Tables can be accessed via the R package described here, as a [collection of CSVs](https://github.com/jaytimm/nmelectiondatr/tree/master/nmelection_tables/CSVs), or as individual tabs in a single [Excel file](https://github.com/jaytimm/nmelectiondatr/tree/master/nmelection_tables/excel).A full code-through of the scraping & summary processes is available [here](https://github.com/jaytimm/nmelectiondatr/blob/master/data-raw/scrape_nmelect_data.Rmd). Code includes functions for gathering election returns that can be used for future statewide/state legislative/federal elections.
 
 Installation
 ------------
@@ -35,7 +33,7 @@ Election results are summarized in four data tables; their contents are summariz
 | nmel\_results\_district | Election returns by district    |
 | nmel\_results\_county   | Election returns by county      |
 
-**An overview of election winners** for ...
+**A summary of election results**:
 
 ``` r
 nmelectiondatr::nmel_results_summary
@@ -119,7 +117,7 @@ nmelectiondatr::nmel_results_district
 
 For convenience, a collection of shapefiles have additionally been included in the package. Files load as `sf` geometries, and include the following:
 
-| table                   | desc                                   |
+| Name                    | Geometry                               |
 |:------------------------|:---------------------------------------|
 | nm\_counties            | New Mexico counties                    |
 | nm\_places              | Census designated places in New Mexico |
