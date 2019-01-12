@@ -125,3 +125,49 @@ For convenience, a collection of shapefiles have additionally been included in t
 | nm\_house\_districts    | State House districts in New Mexico    |
 | nmel\_precincts         | Voting precincts in New Mexico         |
 | us\_congress\_districts | Congressional districts in New Mexico  |
+
+### Election summary
+
+Elections included in package:
+
+``` r
+nmelectiondatr::nmel_results_summary %>%
+  select(Year, Type) %>%
+  unique() %>%
+  knitr::kable()
+```
+
+| Year | Type                                              |
+|:-----|:--------------------------------------------------|
+| 2018 | State Representative                              |
+| 2018 | United States Senator                             |
+| 2018 | United States Representative                      |
+| 2018 | Governor and Lieutenant Governor                  |
+| 2018 | Judge of the Court of Appeals Position 3          |
+| 2018 | Judge of the Court of Appeals Position 4          |
+| 2018 | Judge of the Court of Appeals Position 5          |
+| 2018 | Secretary of State                                |
+| 2018 | State Auditor                                     |
+| 2018 | State Treasurer                                   |
+| 2018 | Attorney General                                  |
+| 2018 | Commissioner of Public Lands                      |
+| 2018 | Justice of the Supreme Court                      |
+| 2018 | Judge of the Court of Appeals Position 1          |
+| 2018 | Judge of the Court of Appeals Position 2          |
+| 2016 | State Representative                              |
+| 2016 | State Senator                                     |
+| 2016 | President and Vice President of the United States |
+| 2016 | United States Representative                      |
+| 2016 | Secretary of State                                |
+| 2016 | Justice of the Supreme Court                      |
+| 2016 | Judge of the Court of Appeals                     |
+| 2014 | State Representative                              |
+| 2014 | United States Senator                             |
+| 2014 | United States Representative                      |
+| 2014 | Governor and Lieutenant Governor                  |
+| 2014 | Secretary of State                                |
+| 2014 | State Auditor                                     |
+| 2014 | State Treasurer                                   |
+| 2014 | Attorney General                                  |
+| 2014 | Commissioner of Public Lands                      |
+| 2014 | Judge of the Court of Appeals                     |
