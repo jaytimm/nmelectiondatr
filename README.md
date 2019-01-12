@@ -126,9 +126,7 @@ For convenience, a collection of shapefiles have additionally been included in t
 | nmel\_precincts         | Voting precincts in New Mexico         |
 | us\_congress\_districts | Congressional districts in New Mexico  |
 
-### Election summary
-
-Elections included in package:
+### Elections included in package
 
 ``` r
 nmelectiondatr::nmel_results_summary %>%
