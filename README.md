@@ -8,7 +8,7 @@ The package includes general election results for the state of New Mexico (2014,
 
 Data included in the package have been collated from excel files made available by the [New Mexico Secretary of State](http://www.sos.state.nm.us/Elections_Data/Past_Election_Results.aspx). Anyone who has dealt with NM SOS data knows they are challenging to work with. Here, we make these data available in simple, aggregated tables that enable more straightforward analyses.
 
-Tables can be accessed via the R package described here, as a [collection of CSVs](https://github.com/jaytimm/nmelectiondatr/tree/master/nmelection_tables/CSVs), or as individual tabs in a single [Excel file](https://github.com/jaytimm/nmelectiondatr/tree/master/nmelection_tables/excel).A full code-through of the scraping & summary processes is available [here](https://github.com/jaytimm/nmelectiondatr/blob/master/data-raw/scrape_nmelect_data.Rmd). Code includes functions for gathering election returns that can be used for future statewide/state legislative/federal elections.
+Tables can be accessed via the R package described here, as a [collection of CSVs](https://github.com/jaytimm/nmelectiondatr/tree/master/nmelection_tables/CSVs), or as individual tabs in a single [Excel file](https://github.com/jaytimm/nmelectiondatr/tree/master/nmelection_tables/excel). A full code-through of the scraping & summary processes is available [here](https://github.com/jaytimm/nmelectiondatr/blob/master/data-raw/scrape_nmelect_data.Rmd). Code includes functions for gathering election returns that can be used for future statewide/state legislative/federal elections in New Mexico.
 
 Installation
 ------------
