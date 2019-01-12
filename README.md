@@ -133,40 +133,29 @@ nmelectiondatr::nmel_results_summary %>%
   select(Year, Type) %>%
   unique() %>%
   arrange(Type) %>%
+  mutate(yes = 'x') %>%
+  spread(Year, yes) %>%
+  replace(., is.na(.),'') %>%
   knitr::kable()
 ```
 
-| Year | Type                                              |
-|:-----|:--------------------------------------------------|
-| 2018 | Attorney General                                  |
-| 2014 | Attorney General                                  |
-| 2018 | Commissioner of Public Lands                      |
-| 2014 | Commissioner of Public Lands                      |
-| 2018 | Governor and Lieutenant Governor                  |
-| 2014 | Governor and Lieutenant Governor                  |
-| 2016 | Judge of the Court of Appeals                     |
-| 2014 | Judge of the Court of Appeals                     |
-| 2018 | Judge of the Court of Appeals Position 1          |
-| 2018 | Judge of the Court of Appeals Position 2          |
-| 2018 | Judge of the Court of Appeals Position 3          |
-| 2018 | Judge of the Court of Appeals Position 4          |
-| 2018 | Judge of the Court of Appeals Position 5          |
-| 2018 | Justice of the Supreme Court                      |
-| 2016 | Justice of the Supreme Court                      |
-| 2016 | President and Vice President of the United States |
-| 2018 | Secretary of State                                |
-| 2016 | Secretary of State                                |
-| 2014 | Secretary of State                                |
-| 2018 | State Auditor                                     |
-| 2014 | State Auditor                                     |
-| 2018 | State Representative                              |
-| 2016 | State Representative                              |
-| 2014 | State Representative                              |
-| 2016 | State Senator                                     |
-| 2018 | State Treasurer                                   |
-| 2014 | State Treasurer                                   |
-| 2018 | United States Representative                      |
-| 2016 | United States Representative                      |
-| 2014 | United States Representative                      |
-| 2018 | United States Senator                             |
-| 2014 | United States Senator                             |
+| Type                                              | 2014 | 2016 | 2018 |
+|:--------------------------------------------------|:-----|:-----|:-----|
+| Attorney General                                  | x    |      | x    |
+| Commissioner of Public Lands                      | x    |      | x    |
+| Governor and Lieutenant Governor                  | x    |      | x    |
+| Judge of the Court of Appeals                     | x    | x    |      |
+| Judge of the Court of Appeals Position 1          |      |      | x    |
+| Judge of the Court of Appeals Position 2          |      |      | x    |
+| Judge of the Court of Appeals Position 3          |      |      | x    |
+| Judge of the Court of Appeals Position 4          |      |      | x    |
+| Judge of the Court of Appeals Position 5          |      |      | x    |
+| Justice of the Supreme Court                      |      | x    | x    |
+| President and Vice President of the United States |      | x    |      |
+| Secretary of State                                | x    | x    | x    |
+| State Auditor                                     | x    |      | x    |
+| State Representative                              | x    | x    | x    |
+| State Senator                                     |      | x    |      |
+| State Treasurer                                   | x    |      | x    |
+| United States Representative                      | x    | x    | x    |
+| United States Senator                             | x    |      | x    |
